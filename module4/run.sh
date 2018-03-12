@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 FILENAME=mem_speed_compare
 
 nvcc $FILENAME.cu -lcudart -o $FILENAME
