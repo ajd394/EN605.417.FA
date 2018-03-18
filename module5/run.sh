@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 FILENAME=assignment5
 
 nvcc $FILENAME.cu -lcudart -o $FILENAME
