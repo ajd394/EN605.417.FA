@@ -1,3 +1,9 @@
+/*
+Author: Andrew DiPrinzio 
+Course: EN605.417.FA
+Assignment: Module 5
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -6,23 +12,14 @@
 #include <time.h>
 #include <math.h>
 
-/*
-Author: Andrew DiPrinzio 
-Course: EN605.417.FA
-Assignment: Module 4
-Resources: https://devblogs.nvidia.com/how-optimize-data-transfers-cuda-cc/
-*/
 static const uint32_t DEFAULT_NUM_THREADS = 1024;
 static const uint32_t DEFAULT_BLOCK_SIZE = 16;
 
-typedef unsigned short int u16;
-typedef unsigned int u32;
-
 #define KERNEL_LOOP 4096
 
-__constant__ u32 const_data_gpu[KERNEL_LOOP];
-__device__ static u32 gmem_data_gpu[KERNEL_LOOP];
-static u32 const_data_host[KERNEL_LOOP];
+__constant__ unsigned int const_data_gpu[KERNEL_LOOP];
+__device__ static unsigned int gmem_data_gpu[KERNEL_LOOP];
+static unsigned int const_data_host[KERNEL_LOOP];
 
 static void usage(){    
     printf("Usage: ./assignment5 [-t <num_threads>] [-b <block_size>] [-h]\n");
@@ -74,12 +71,12 @@ static Arguments parse_arguments(const int argc, char ** argv){
     return args;
 }
 
-__global__ void const_test_gpu_gmem(u32 * const data, const u32 num_elements)
+__global__ void const_test_gpu_gmem(unsigned int * const data, const unsigned int num_elements)
 {
-	const u32 tid = (blockIdx.x * blockDim.x) + threadIdx.x;
+	const unsigned int tid = (blockIdx.x * blockDim.x) + threadIdx.x;
 	if(tid < num_elements)
 	{
-		u32 d = gmem_data_gpu[0];
+		unsigned int d = gmem_data_gpu[0];
 
 		for(int i=0;i<KERNEL_LOOP;i++)
 		{
@@ -94,12 +91,12 @@ __global__ void const_test_gpu_gmem(u32 * const data, const u32 num_elements)
 }
 
 
-__global__ void const_test_gpu_const(u32 * const data, const u32 num_elements)
+__global__ void const_test_gpu_const(unsigned int * const data, const unsigned int num_elements)
 {
-	const u32 tid = (blockIdx.x * blockDim.x) + threadIdx.x;
+	const unsigned int tid = (blockIdx.x * blockDim.x) + threadIdx.x;
 	if(tid < num_elements)
 	{
-		u32 d = const_data_gpu[0];
+		unsigned int d = const_data_gpu[0];
 
 		for(int i=0;i<KERNEL_LOOP;i++)
 		{
@@ -132,53 +129,19 @@ __host__ void cuda_error_check(const char * prefix, const char * postfix)
 	}
 }
 
-__host__ void generate_rand_data(u32 * host_data_ptr)
+__host__ void generate_rand_data(unsigned int * host_data_ptr)
 {
-	for(u32 i=0; i < KERNEL_LOOP; i++)
+	for(unsigned int i=0; i < KERNEL_LOOP; i++)
 	{
-		host_data_ptr[i] = (u32) rand();
+		host_data_ptr[i] = (unsigned int) rand();
 	}
 }
-// ******************************************************
-
-__device__ void copy_data_to_shared(const u32 * const data,
-    u32 * const sort_tmp,
-    const u32 num_lists,
-    const u32 num_elements,
-    const u32 tid)
-{
-// Copy data into temp store
-for(u32 i = 0; i<num_elements; i++)
-{
-sort_tmp[i+tid] = data[i+tid];
-}
-__syncthreads();
-}
-
-__global__ void gpu_sort_array_array(u32 * const data,
-    const u32 num_lists,
-    const u32 num_elements)
-{
-const u32 tid = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-__shared__ u32 sort_tmp[NUM_ELEMENTS];
-__shared__ u32 sort_tmp_0[NUM_ELEMENTS];
-__shared__ u32 sort_tmp_1[NUM_ELEMENTS];
-
-copy_data_to_shared(data, sort_tmp, num_lists,
-num_elements, tid);
-
-radix_sort2(sort_tmp, num_lists, num_elements, tid, sort_tmp_0, sort_tmp_1);
-
-merge_array1(sort_tmp, data, num_lists, num_elements, tid);
-}
-
 __host__ void test_const_mem(Arguments args)
 {
-	const u32 num_elements = (128*1024);
-	const u32 num_threads = args.num_threads;
-	const u32 num_blocks = (num_elements + (num_threads-1))/num_threads;
-	const u32 num_bytes = num_elements * sizeof(u32);
+	const unsigned int num_elements = (128*1024);
+	const unsigned int num_threads = args.num_threads;
+	const unsigned int num_blocks = (num_elements + (num_threads-1))/num_threads;
+	const unsigned int num_bytes = num_elements * sizeof(unsigned int);
 	int max_device_num;
 	const int max_runs = 6;
 
@@ -188,7 +151,7 @@ __host__ void test_const_mem(Arguments args)
 	{
 		cudaSetDevice(device_num);
 
-		u32 * data_gpu;
+		unsigned int * data_gpu;
 		cudaEvent_t kernel_start1, kernel_stop1;
 		cudaEvent_t kernel_start2, kernel_stop2;
 		float delta_time1 = 0.0F, delta_time2 = 0.0F;
@@ -208,7 +171,7 @@ __host__ void test_const_mem(Arguments args)
 		{
 			generate_rand_data(const_data_host);
 
-			cudaMemcpyToSymbol(const_data_gpu, const_data_host, KERNEL_LOOP * sizeof(u32));
+			cudaMemcpyToSymbol(const_data_gpu, const_data_host, KERNEL_LOOP * sizeof(unsigned int));
 
 			const_test_gpu_gmem <<<num_blocks, num_threads>>>(data_gpu, num_elements);
 			cuda_error_check("Error ", " returned from literal runtime  kernel!");
@@ -223,7 +186,7 @@ __host__ void test_const_mem(Arguments args)
 			cudaEventSynchronize(kernel_stop1);
 			cudaEventElapsedTime(&delta_time1, kernel_start1, kernel_stop1);
 
-			cudaMemcpyToSymbol(gmem_data_gpu, const_data_host, KERNEL_LOOP * sizeof(u32));
+			cudaMemcpyToSymbol(gmem_data_gpu, const_data_host, KERNEL_LOOP * sizeof(unsigned int));
 			const_test_gpu_const<<< num_blocks, num_threads >>>(data_gpu, num_elements);
 
 			cuda_error_check("Error ", " returned from literal startup  kernel!");
