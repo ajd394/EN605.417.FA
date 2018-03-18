@@ -4,7 +4,7 @@ set -e
 
 FILENAME=assignment5
 
-nvcc $FILENAME.cu -lcudart -o $FILENAME
+nvcc $FILENAME.cu -lcudart -Wno-deprecated-gpu-targets -o $FILENAME
 
 if [[ ! -v CI ]]; then
     ./$FILENAME -t 1024 -b 16
