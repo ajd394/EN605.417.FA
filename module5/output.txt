@@ -1,0 +1,37 @@
+Constant Memory Experiment
+**************************
+Num Threads: 4096, Block Size: 32
+
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Constant version is faster by: 0.00ms (G=0.20ms vs. C=0.20ms)
+Num Threads: 99936, Block Size: 64
+
+Constant version is faster by: 0.02ms (G=2.53ms vs. C=2.51ms)
+Constant version is faster by: 0.03ms (G=2.53ms vs. C=2.51ms)
+Constant version is faster by: 0.02ms (G=2.53ms vs. C=2.51ms)
+Constant version is faster by: 0.02ms (G=2.53ms vs. C=2.51ms)
+Constant version is faster by: 0.02ms (G=2.53ms vs. C=2.51ms)
+Constant version is faster by: 0.02ms (G=2.53ms vs. C=2.51ms)
+Num Threads: 8192, Block Size: 32
+
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Constant version is faster by: 0.00ms (G=0.39ms vs. C=0.39ms)
+Shared Memory Experiment
+**************************
+Num Threads: 32000000, Block Size: 32
+  Function using Shared memory 0.002080 ms
+  Function using Global memory 0.007776 ms
+Num Threads: 32000000, Block Size: 64
+  Function using Shared memory 0.002080 ms
+  Function using Global memory 0.007744 ms
+Num Threads: 8192, Block Size: 32
+  Function using Shared memory 0.036480 ms
+  Function using Global memory 0.014048 ms
