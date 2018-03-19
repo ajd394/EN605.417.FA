@@ -68,6 +68,11 @@ static Arguments parse_arguments(const int argc, char ** argv){
     return args;
 }
 
+// Shared stencil addition function: adds to the value at index X values at indicies X-RADIUS -> X+RADIUS
+/* 
+This function demonstrates the value of shared memory because with out it each thread would need to 
+perform  2 * RADIUS + 1 global memory accesses.
+*/
 __global__ 
 void stencil_1d_shared(int *in, int *out)
 {
@@ -90,6 +95,7 @@ void stencil_1d_shared(int *in, int *out)
     out[gindex] = result;
 }
 
+// Global stencil addition function: adds to the value at index X values at indicies X-RADIUS -> X+RADIUS
 __global__ 
 void stencil_1d_global(const int *in, int *out)
 {
@@ -124,6 +130,7 @@ void measure_shared_kern_speed(Arguments args, int * a, int * b, int * a_d, int 
    
     cudaEventRecord(startEvent, 0);
 
+    /* Excution of kernel with dynamically allocated shared memory */
     stencil_1d_shared<<<num_blocks, num_threads_per_blk, (num_threads_per_blk + (2 * RADIUS)) * sizeof(int) >>>(a_d, b_d);
 
     cudaEventRecord(stopEvent, 0);
@@ -131,10 +138,8 @@ void measure_shared_kern_speed(Arguments args, int * a, int * b, int * a_d, int 
     cudaEventElapsedTime(&time, startEvent, stopEvent);
     printf("  Function using Shared memory %f ms\n", time);
 
-    //Print Shared sums
-    
-    cudaMemcpy(b, b_d, array_size_in_bytes, cudaMemcpyDeviceToHost );
-
+    //Print sums for debugging
+    // cudaMemcpy(b, b_d, array_size_in_bytes, cudaMemcpyDeviceToHost );
     // for(unsigned int i = 0; i < array_size; i++)
 	// {
 	// 	printf("Sum #%d: %d\n",i,b[i]);
@@ -150,8 +155,8 @@ void measure_shared_kern_speed(Arguments args, int * a, int * b, int * a_d, int 
     cudaEventElapsedTime(&time, startEvent, stopEvent);
     printf("  Function using Global memory %f ms\n", time);
 
-    cudaMemcpy(b, b_d, array_size_in_bytes, cudaMemcpyDeviceToHost );
-
+    //Print sums for debugging
+    //cudaMemcpy(b, b_d, array_size_in_bytes, cudaMemcpyDeviceToHost );
     // for(unsigned int i = 0; i < array_size; i++)
 	// {
 	// 	printf("Sum #%d: %d\n",i,b[i]);
@@ -161,6 +166,7 @@ void measure_shared_kern_speed(Arguments args, int * a, int * b, int * a_d, int 
     cudaEventDestroy(stopEvent);
 }
 
+//configures host and device memory for experement.
 void run_shared_experemnt(Arguments args){
     int *h_aPinned, *h_bPinned;
 
@@ -192,47 +198,6 @@ void run_shared_experemnt(Arguments args){
     cudaFreeHost(h_bPinned);
 }
 
-// void run_constant_experemnt(Arguments args){
-//     int *h_aPinned, *h_bPinned;
-
-//     __constant__ unsigned int const_data_gpu[32];
-//     static unsigned int const_data_host[32];
-
-//     int array_size = args.num_threads;
-//     const unsigned int array_size_in_bytes = array_size * sizeof(int);
-
-//     /* Randomly generate input vectors and dynamically allocate their memory */
-//     cudaMallocHost((void**)&h_aPinned, array_size_in_bytes);
-//     cudaMallocHost((void**)&h_bPinned, array_size_in_bytes);
-
-//     int i;
-//     for (i = 0; i < array_size; i++) {
-//         h_aPinned[i] = random(0,100);
-//         h_bPinned[i] = random(0,100);
-//     }
-
-//     for (i = 0; i < 32; i++) {
-//         const_data_host[i] = random(0,100);
-//     }
-
-//     /* Declare pointers for GPU based params */
-//     int *a_d;
-//     int *b_d;
-
-//     cudaMalloc((void**)&a_d, array_size_in_bytes);
-//     cudaMalloc((void**)&b_d, array_size_in_bytes);
-
-//     measure_kern_speed(args, h_aPinned, h_bPinned, a_d, b_d);
-
-//     cudaMemcpyToSymbol(const_data_gpu, h_bPinned, array_size_in_bytes);
-
-//     //free memory
-//     cudaFree(a_d);
-//     cudaFree(b_d);
-//     cudaFreeHost(h_aPinned);
-//     cudaFreeHost(h_bPinned);
-// }
-
 int main(int argc, char ** argv)
 {
     Arguments args = parse_arguments(argc, argv);
@@ -241,8 +206,6 @@ int main(int argc, char ** argv)
     run_shared_experemnt(args);
 
     cudaDeviceReset();
-
-    // run_constant_experemnt(args);
     
 	return EXIT_SUCCESS;
 }
