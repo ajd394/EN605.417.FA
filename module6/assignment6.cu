@@ -1,9 +1,3 @@
-/*
-Author: Andrew DiPrinzio 
-Course: EN605.417.FA
-Assignment: Module 6
-*/
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -12,7 +6,10 @@ Assignment: Module 6
 #include <time.h>
 #include <math.h>
 
-#define KERNEL_LOOP 128
+/*
+Author: Andrew DiPrinzio 
+Course: EN605.417.FA
+*/
 
 static const uint32_t DEFAULT_NUM_THREADS = 1024;
 static const uint32_t DEFAULT_BLOCK_SIZE = 16;
@@ -25,83 +22,147 @@ static void usage(){
     printf("\t-b: Specify the size of each block. <block_size> must be greater than 0. Optional (default %u)\n", DEFAULT_BLOCK_SIZE);    
 }
 
-__host__ void wait_exit(void)
-{
-    char ch;
+// Structure that holds program arguments specifying number of threads/blocks
+// to use.
+typedef struct {    
+    uint32_t num_threads;
+    uint32_t block_size;
+} Arguments;
 
-    printf("\nPress any key to exit");
-    ch = getchar();
+// Parse the command line arguments using getopt and return an Argument structure
+// GetOpt requies the POSIX C Library
+static Arguments parse_arguments(const int argc, char ** argv){   
+    // Argument format string for getopt
+    static const char * _ARG_STR = "ht:b:";
+    // Initialize arguments to their default values    
+    Arguments args;    
+    args.num_threads = DEFAULT_NUM_THREADS;    
+    args.block_size = DEFAULT_BLOCK_SIZE;
+    // Parse any command line options
+    int c;
+    int value;
+    while ((c = getopt(argc, argv, _ARG_STR)) != -1) {
+        switch (c) {
+            case 't':
+                value = atoi(optarg);
+                args.num_threads = value;
+                break;
+            case 'b':
+                // Normal argument
+                value = atoi(optarg);
+                args.block_size = value;
+                break;
+            case 'h':
+                // 'help': print usage, then exit
+                // note the fall through
+                usage();
+            default:
+                exit(-1);
+        }
+    }
+    return args;
 }
 
-__host__ void generate_rand_data(unsigned int * host_data_ptr)
+//Kernel that adds two vectors
+__global__
+void add_ab_register(int *a, const int *b)
 {
-    for(unsigned int i=0; i < KERNEL_LOOP; i++)
-    {
-            host_data_ptr[i] = (unsigned int) rand();
-    }
+    const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+    int x = a[thread_idx];
+    int y = b[thread_idx];
+    x += y;
+    x *= y;
+    a[thread_idx] = x;
 }
 
-__global__ void test_gpu_register(unsigned int * const data, const unsigned int num_elements)
+__global__
+void add_ab_global(int *a, const int *b)
 {
-    const unsigned int tid = (blockIdx.x * blockDim.x) + threadIdx.x;
-    if(tid < num_elements)
-    {
-            unsigned int d_tmp = data[tid];
-            d_tmp = d_tmp * 2;
-            data[tid] = d_tmp;
-    }
+    const unsigned int thread_idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+    a[thread_idx] += b[thread_idx];
+    a[thread_idx] *= b[thread_idx];
 }
 
-__host__ void gpu_kernel(void)
-{
-    const unsigned int num_elements = KERNEL_LOOP;
-    const unsigned int num_threads = KERNEL_LOOP;
-    const unsigned int num_blocks = num_elements/num_threads;
-    const unsigned int num_bytes = num_elements * sizeof(unsigned int);
+// Helper function to generate a random number within a defined range
+int random(int min, int max){
+    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
 
-    unsigned int * data_gpu;
+void run_vector_add(Arguments args)
+{ 
+    printf("Running random vector add with %u threads and a block size of %u\n", args.num_threads, args.block_size);
+    int array_size = args.num_threads;
+    const unsigned int array_size_in_bytes = array_size * sizeof(int);
 
-    unsigned int host_packed_array[num_elements];
-    unsigned int host_packed_array_output[num_elements];
+    /* Randomly generate input vectors and dynamically allocate their memory */
+    int * a; 
+    int * b;
+    
+    a = (int*)malloc(array_size * sizeof(int));
+    b = (int*)malloc(array_size * sizeof(int));
 
-    cudaMalloc(&data_gpu, num_bytes);
-
-    generate_rand_data(host_packed_array);
-
-    cudaMemcpy(data_gpu, host_packed_array, num_bytes,cudaMemcpyHostToDevice);
-
-    test_gpu_register <<<num_blocks, num_threads>>>(data_gpu, num_elements);
-
-    cudaThreadSynchronize();        // Wait for the GPU launched work to complete
-    cudaGetLastError();
-
-    cudaMemcpy(host_packed_array_output, data_gpu, num_bytes,cudaMemcpyDeviceToHost);
-
-    for (int i = 0; i < num_elements; i++){
-            printf("Input value: %x, device output: %x\n",host_packed_array[i], host_packed_array_output[i]);
+    int i;
+    for (i = 0; i < array_size; i++) {
+        a[i] = random(0,100);
+        b[i] = random(0,100);
     }
 
-    cudaFree((void* ) data_gpu);
+	/* Declare pointers for GPU based params */
+    int *a_d;
+    int *b_d;
+
+    // create events for timing
+    cudaEvent_t startEvent, stopEvent; 
+    cudaEventCreate(&startEvent);
+    cudaEventCreate(&stopEvent);
+    float time;
+
+	cudaMalloc((void**)&a_d, array_size_in_bytes);
+	cudaMalloc((void**)&b_d, array_size_in_bytes);
+	cudaMemcpy( a_d, a, array_size_in_bytes, cudaMemcpyHostToDevice );
+	cudaMemcpy( b_d, b, array_size_in_bytes, cudaMemcpyHostToDevice );
+
+	const unsigned int num_blocks = array_size / args.block_size;
+	const unsigned int num_threads_per_blk = array_size/num_blocks;
+
+    cudaEventRecord(startEvent, 0);
+
+	/* Execute our kernel */
+    add_ab_register<<<num_blocks, num_threads_per_blk>>>(a_d, b_d);
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    cudaEventElapsedTime(&time, startEvent, stopEvent);
+    printf("  Function using Register memory %f ms\n", time);
+    
+    //Reset Vector
+    cudaMemcpy( a_d, a, array_size_in_bytes, cudaMemcpyHostToDevice );
+    
+    cudaEventRecord(startEvent, 0);
+
+    add_ab_global<<<num_blocks, num_threads_per_blk>>>(a_d, b_d);
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    cudaEventElapsedTime(&time, startEvent, stopEvent);
+    printf("  Function using Global memory %f ms\n", time);
+
+	/* Free the arrays on the GPU as now we're done with them */
+	cudaMemcpy(a, a_d, array_size_in_bytes, cudaMemcpyDeviceToHost );
+	cudaFree(a_d);
+    cudaFree(b_d);
+    cudaEventDestroy(startEvent);
+    cudaEventDestroy(stopEvent);
+}
+
+int main(int argc, char ** argv)
+{
+    Arguments args = parse_arguments(argc, argv);
+    printf("Num Threads: %u, Block Size: %u\n", args.num_threads, args.block_size);
+
+    run_vector_add(args);
+
     cudaDeviceReset();
-    wait_exit();
-}
-
-void execute_host_functions()
-{
-
-}
-
-void execute_gpu_functions()
-{
-	gpu_kernel();
-}
-
-/**
- * Host function that prepares data array and passes it to the CUDA kernel.
- */
-int main(void) {
-	execute_host_functions();
-	execute_gpu_functions();
-
+    
 	return EXIT_SUCCESS;
 }

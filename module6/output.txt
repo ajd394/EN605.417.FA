@@ -1,0 +1,22 @@
+ccc_v1_w_ZDE2_108495@gpu_g2_1:~$ ./run.sh                                                                                                                        
+Num Threads: 1024, Block Size: 16                                                                                                                                
+Running random vector add with 1024 threads and a block size of 16                                                                                               
+  Function using Register memory 0.038848 ms                                                                                                                     
+  Function using Global memory 0.019168 ms                                                                                                                       
+Num Threads: 256, Block Size: 16                                                                                                                                 
+Running random vector add with 256 threads and a block size of 16                                                                                                
+  Function using Register memory 0.039200 ms                                                                                                                     
+  Function using Global memory 0.018400 ms                                                                                                                       
+ccc_v1_w_ZDE2_108495@gpu_g2_1:~$ ./run.sh                                                                                                                        
+Num Threads: 4096, Block Size: 32                                                                                                                                
+Running random vector add with 4096 threads and a block size of 32                                                                                               
+  Function using Register memory 0.033152 ms                                                                                                                     
+  Function using Global memory 0.017568 ms                                                                                                                       
+Num Threads: 32000000, Block Size: 64                                                                                                                            
+Running random vector add with 32000000 threads and a block size of 64                                                                                           
+  Function using Register memory 0.002080 ms                                                                                                                     
+  Function using Global memory 0.002112 ms                                                                                                                       
+Num Threads: 8192, Block Size: 32                                                                                                                                
+Running random vector add with 8192 threads and a block size of 32                                                                                               
+  Function using Register memory 0.039072 ms                                                                                                                     
+  Function using Global memory 0.016512 ms      
