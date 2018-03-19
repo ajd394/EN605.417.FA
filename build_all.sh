@@ -4,6 +4,8 @@ set -e
 modules=(
     "module3"
     "module4"
+    "module5"
+    "module6"
 )
 
 if [[ -v CI ]]; then
