@@ -6,6 +6,7 @@ modules=(
     "module4"
     "module5"
     "module6"
+    "module7"
 )
 
 if [[ -v CI ]]; then
