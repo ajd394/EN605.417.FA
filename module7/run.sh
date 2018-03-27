@@ -2,7 +2,7 @@
 
 set -e
 
-FILENAME=assignment
+FILENAME=assignment7
 
 nvcc $FILENAME.cu -lcudart -Wno-deprecated-gpu-targets -o $FILENAME 
 
