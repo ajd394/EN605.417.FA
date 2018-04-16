@@ -17,11 +17,11 @@ pushd ${CURR_DIR}
     fi
 popd
 
-# CURR_DIR=${FILENAME}_nvgraph
-# pushd ${CURR_DIR}
-#     make
+CURR_DIR=${FILENAME}_nvgraph
+pushd ${CURR_DIR}
+    make
 
-#     if [[ ! -v CI ]]; then
-#         ./${CURR_DIR}
-#     fi
-# popd
+    if [[ ! -v CI ]]; then
+        ./${CURR_DIR}
+    fi
+popd
