@@ -3,7 +3,7 @@
 set -e
 
 FILENAME=assignment9
-
+echo "NPP"
 CURR_DIR=${FILENAME}_npp
 pushd ${CURR_DIR}
     make
@@ -17,11 +17,14 @@ pushd ${CURR_DIR}
     fi
 popd
 
+echo "NVGRAPH"
 CURR_DIR=${FILENAME}_nvgraph
 pushd ${CURR_DIR}
     make
 
     if [[ ! -v CI ]]; then
+        echo "Executing twice with random edge weights"
+        ./${CURR_DIR}
         ./${CURR_DIR}
     fi
 popd
