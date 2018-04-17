@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         if (checkCmdLineFlag(argc, (const char **)argv, "input"))
         {
             getCmdLineArgumentString(argc, (const char **)argv, "input", &filePath);
-            sFilename = filePath;
+            sFilename = sdkFindFilePath(filePath, argv[0]);
         }
         else
         {
@@ -64,13 +64,13 @@ int main(int argc, char *argv[])
 
         if (infile.good())
         {
-            std::cout << "boxFilterNPP opened: <" << sFilename.data() << "> successfully!" << std::endl;
+            std::cout << "assignment9_npp opened: <" << sFilename.data() << "> successfully!" << std::endl;
             file_errors = 0;
             infile.close();
         }
         else
         {
-            std::cout << "boxFilterNPP unable to open: <" << sFilename.data() << ">" << std::endl;
+            std::cout << "assignment9_npp unable to open: <" << sFilename.data() << ">" << std::endl;
             file_errors++;
             infile.close();
         }

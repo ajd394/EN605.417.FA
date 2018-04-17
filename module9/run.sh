@@ -3,7 +3,8 @@
 set -e
 
 FILENAME=assignment9
-echo "NPP"
+
+printf "\nNPP\n"
 CURR_DIR=${FILENAME}_npp
 pushd ${CURR_DIR}
     make
@@ -12,12 +13,12 @@ pushd ${CURR_DIR}
         ./${CURR_DIR} --masksz 5
         ./${CURR_DIR} --masksz 10
 
-        ./${CURR_DIR} --input ../../common/data/flower.ppm --masksz 5
-        ./${CURR_DIR} --input ../../common/data/flower.ppm --masksz 10
+        #./${CURR_DIR} --input flower.ppm --masksz 5
+        #./${CURR_DIR} --input flower.ppm --masksz 10
     fi
 popd
 
-echo "NVGRAPH"
+printf "\nNVGRAPH\n"
 CURR_DIR=${FILENAME}_nvgraph
 pushd ${CURR_DIR}
     make
@@ -29,7 +30,7 @@ pushd ${CURR_DIR}
     fi
 popd
 
-echo "Thrust"
+printf "\nThrust\n"
 CURR_DIR=${FILENAME}_thrust
 pushd ${CURR_DIR}
     make

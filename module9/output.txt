@@ -1,0 +1,32 @@
+
+NPP
+~/module9/assignment9_npp ~/module9
+make: Nothing to be done for 'all'.
+./assignment9_npp Starting...
+
+assignment9_npp opened: <../../common/data/Lena.pgm> successfully!
+GPU Execution time: 0.055744ms
+Saved image: ../../common/data/Lena_boxFilter.pgm
+./assignment9_npp Starting...
+
+assignment9_npp opened: <../../common/data/Lena.pgm> successfully!
+GPU Execution time: 0.0528ms
+Saved image: ../../common/data/Lena_boxFilter.pgm
+~/module9
+
+NVGRAPH
+~/module9/assignment9_nvgraph ~/module9
+make: Nothing to be done for 'all'.
+Executing twice with random edge weights
+GPU Execution time: 0.5752ms
+GPU Execution time: 0.626592ms
+~/module9
+
+Thrust
+~/module9/assignment9_thrust ~/module9
+make: Nothing to be done for 'all'.
+Executing with varied number of elements
+GPU Execution time: 0.0512ms
+GPU Execution time: 0.050624ms
+GPU Execution time: 0.049568ms
+~/module9
