@@ -1,0 +1,7 @@
+NVGRAPH
+~/module9/assignment9_nvgraph ~/module9
+make: Nothing to be done for 'all'.
+Executing twice with random edge weights
+GPU Execution time: 0.5752ms
+GPU Execution time: 0.626592ms
+~/module9
