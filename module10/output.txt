@@ -1,0 +1,20 @@
+
+Executing run of the following command: add
+OpenCl Execution time is: 0.026 milliseconds 
+Executed program succesfully.
+
+Executing run of the following command: sub
+OpenCl Execution time is: 0.024 milliseconds 
+Executed program succesfully.
+
+Executing run of the following command: mul
+OpenCl Execution time is: 0.025 milliseconds 
+Executed program succesfully.
+
+Executing run of the following command: div
+OpenCl Execution time is: 0.024 milliseconds 
+Executed program succesfully.
+
+Executing run of the following command: pow
+OpenCl Execution time is: 0.045 milliseconds 
+Executed program succesfully.
