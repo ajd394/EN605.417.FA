@@ -1,0 +1,8 @@
+Running with randized signal
+OpenCl Execution time is: 0.024 milliseconds 
+
+Executed program succesfully.
+Running with randized signal
+OpenCl Execution time is: 0.030 milliseconds 
+
+Executed program succesfully.

@@ -14,4 +14,5 @@ fi
 
 if [[ ! -v CI ]]; then
     ./$FILENAME
+    ./$FILENAME
 fi

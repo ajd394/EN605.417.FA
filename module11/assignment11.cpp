@@ -8,11 +8,17 @@
 //            http://www.openclprogrammingguide.com
 //
 
-
 // Convolution.cpp
 //
 //    This is a simple example that demonstrates OpenCL platform, device, and context
 //    use.
+
+/*
+Author: Andrew DiPrinzio 
+Course: EN605.417.FA
+Assignment: Module 11
+Resources:
+*/
 
 #include <iostream>
 #include <fstream>
@@ -21,8 +27,6 @@
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
-#else
-#include <CL/cl.h>
 #endif
 
 #if !defined(CL_CALLBACK)
@@ -30,33 +34,46 @@
 #endif
 
 // Constants
-const unsigned int inputSignalWidth  = 8;
-const unsigned int inputSignalHeight = 8;
+const unsigned int inputSignalWidth  = 49;
+const unsigned int inputSignalHeight = 49;
 
-cl_uint inputSignal[inputSignalWidth][inputSignalHeight] =
+cl_uint inputSignal[inputSignalWidth][inputSignalHeight];
+
+const unsigned int outputSignalWidth  = 7;
+const unsigned int outputSignalHeight = 7;
+
+cl_float outputSignal[outputSignalWidth][outputSignalHeight];
+
+const unsigned int maskWidth  = 7;
+const unsigned int maskHeight = 7;
+
+cl_float mask[maskWidth][maskHeight] =
 {
-	{3, 1, 1, 4, 8, 2, 1, 3},
-	{4, 2, 1, 1, 2, 1, 2, 3},
-	{4, 4, 4, 4, 3, 2, 2, 2},
-	{9, 8, 3, 8, 9, 0, 0, 0},
-	{9, 3, 3, 9, 0, 0, 0, 0},
-	{0, 9, 0, 8, 0, 0, 0, 0},
-	{3, 0, 8, 8, 9, 4, 4, 4},
-	{5, 9, 8, 1, 8, 1, 1, 1}
+	{0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50},
+	{0.50, 0.75, 0.75, 0.75, 0.75, 0.75, 0.50},
+	{0.50, 0.75, 1.00, 1.00, 1.00, 0.75, 0.50},
+	{0.50, 0.75, 1.00, 0.00, 1.00, 0.75, 0.50},
+	{0.50, 0.75, 1.00, 1.00, 1.00, 0.75, 0.50},
+	{0.50, 0.75, 0.75, 0.75, 0.75, 0.75, 0.50},
+	{0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50},
 };
 
-const unsigned int outputSignalWidth  = 6;
-const unsigned int outputSignalHeight = 6;
+// Helper function to generate a random number within a defined range
+cl_uint random(int min, int max){
+    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
 
-cl_uint outputSignal[outputSignalWidth][outputSignalHeight];
-
-const unsigned int maskWidth  = 3;
-const unsigned int maskHeight = 3;
-
-cl_uint mask[maskWidth][maskHeight] =
+///
+// Helper Function to gerneate random input signal
+inline void 
+generateSignal(cl_uint input[inputSignalWidth][inputSignalHeight])
 {
-	{1, 1, 1}, {1, 0, 1}, {1, 1, 1},
-};
+	for(int i = 0; i < inputSignalWidth; i++){
+		for(int j = 0; j < inputSignalHeight; j++){
+			input[i][j] = random(0,9);
+		}
+	}
+}
 
 ///
 // Function to check and handle OpenCL errors
@@ -98,6 +115,10 @@ int main(int argc, char** argv)
 	cl_mem inputSignalBuffer;
 	cl_mem outputSignalBuffer;
 	cl_mem maskBuffer;
+
+	generateSignal(inputSignal);
+
+	std::cout << "Running with randized signal" << std::endl;
 
     // First, select an OpenCL platform to run on.  
 	errNum = clGetPlatformIDs(0, NULL, &numPlatforms);
@@ -165,8 +186,8 @@ int main(int argc, char** argv)
 		&errNum);
 	checkErr(errNum, "clCreateContext");
 
-	std::ifstream srcFile("Convolution.cl");
-    checkErr(srcFile.is_open() ? CL_SUCCESS : -1, "reading Convolution.cl");
+	std::ifstream srcFile("assignment11.cl");
+    checkErr(srcFile.is_open() ? CL_SUCCESS : -1, "reading assignment11.cl");
 
 	std::string srcProg(
         std::istreambuf_iterator<char>(srcFile),
@@ -228,7 +249,7 @@ int main(int argc, char** argv)
 	maskBuffer = clCreateBuffer(
 		context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		sizeof(cl_uint) * maskHeight * maskWidth,
+		sizeof(cl_float) * maskHeight * maskWidth,
 		static_cast<void *>(mask),
 		&errNum);
 	checkErr(errNum, "clCreateBuffer(mask)");
@@ -236,7 +257,7 @@ int main(int argc, char** argv)
 	outputSignalBuffer = clCreateBuffer(
 		context,
 		CL_MEM_WRITE_ONLY,
-		sizeof(cl_uint) * outputSignalHeight * outputSignalWidth,
+		sizeof(cl_float) * outputSignalHeight * outputSignalWidth,
 		NULL,
 		&errNum);
 	checkErr(errNum, "clCreateBuffer(outputSignal)");
@@ -245,7 +266,7 @@ int main(int argc, char** argv)
 	queue = clCreateCommandQueue(
 		context,
 		deviceIDs[0],
-		0,
+		CL_QUEUE_PROFILING_ENABLE,
 		&errNum);
 	checkErr(errNum, "clCreateCommandQueue");
 
@@ -259,6 +280,8 @@ int main(int argc, char** argv)
 	const size_t globalWorkSize[1] = { outputSignalWidth * outputSignalHeight };
     const size_t localWorkSize[1]  = { 1 };
 
+	cl_event event;
+
     // Queue the kernel up for execution across the array
     errNum = clEnqueueNDRangeKernel(
 		queue, 
@@ -269,8 +292,19 @@ int main(int argc, char** argv)
 		localWorkSize,
         0, 
 		NULL, 
-		NULL);
+		&event);
 	checkErr(errNum, "clEnqueueNDRangeKernel");
+
+	clWaitForEvents(1, &event);
+    clFinish(queue);
+    cl_ulong time_start;
+    cl_ulong time_end;
+
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+
+	double nanoSeconds = time_end-time_start;
+    printf("OpenCl Execution time is: %0.3f milliseconds \n",nanoSeconds / 1000000.0);
     
 	errNum = clEnqueueReadBuffer(
 		queue, 
@@ -285,14 +319,14 @@ int main(int argc, char** argv)
 	checkErr(errNum, "clEnqueueReadBuffer");
 
     // Output the result buffer
-    for (int y = 0; y < outputSignalHeight; y++)
-	{
-		for (int x = 0; x < outputSignalWidth; x++)
-		{
-			std::cout << outputSignal[x][y] << " ";
-		}
-		std::cout << std::endl;
-	}
+    // for (int y = 0; y < outputSignalHeight; y++)
+	// {
+	// 	for (int x = 0; x < outputSignalWidth; x++)
+	// 	{
+	// 		std::cout << outputSignal[x][y] << " ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
 
     std::cout << std::endl << "Executed program succesfully." << std::endl;
 
