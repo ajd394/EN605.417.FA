@@ -1,0 +1,4 @@
+
+Executing run of the following command: assignment13
+OpenCl Execution time is: 0.026 milliseconds 
+Executed program succesfully.
