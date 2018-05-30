@@ -298,17 +298,41 @@ int main(int argc, char** argv)
         checkErr(errNum, "clSetKernelArg(avg4)");
 
         errNum = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&buffers_out[i]);
+        //errNum = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&buffers_out);
         checkErr(errNum, "clSetKernelArg(avg4)");
 
         kernels.push_back(kernel);
     }
+
     
-    std::vector<cl_event> events;
+    // std::vector<cl_event> events;
+    // for (unsigned int i = 0; i < numSubBufs; i++)
+    // {
+    //     cl_event event;
+
+    //     size_t gWI = sub_buf_size;
+
+    //     errNum = clEnqueueNDRangeKernel(
+    //         queue, 
+    //         kernels[i], 
+    //         1, 
+    //         NULL,
+    //         (const size_t*)&gWI, 
+    //         (const size_t*)NULL, 
+    //         0, 
+    //         0, 
+    //         &event);
+    //     checkErr(errNum, "clEnqueueNDRangeKernel");
+
+    //     events.push_back(event);
+    // }
+
+        std::vector<cl_event> events;
     for (unsigned int i = 0; i < numSubBufs; i++)
     {
         cl_event event;
 
-        size_t gWI = sub_buf_size;
+        size_t gWI = 1;
 
         errNum = clEnqueueNDRangeKernel(
             queue, 

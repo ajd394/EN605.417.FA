@@ -13,5 +13,9 @@ __kernel void avg4(__global const float * input, __global float * buffer_out)
 {
 	size_t id = get_global_id(0);
 	//computes the average of when executed on 4 numbers
-	buffer_out[0] += (input[id] * 0.25);
+	float avg = 0;
+	for (unsigned int i = 0; i < 4; i++){
+		avg += input[i];
+	}
+	buffer_out[id] = avg / 4;
 }
